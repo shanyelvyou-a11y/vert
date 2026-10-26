@@ -1,0 +1,81 @@
+import { PUB_VERTD_URL } from "$env/static/public";
+import type { ConversionSpeed } from "$lib/converters/vertd/vertd.svelte";
+import { readSettings } from "$lib/util/settings";
+import { VertdInstance } from "./vertdSettings.svelte";
+
+export { default as Appearance } from "./Appearance.svelte";
+export { default as Conversion } from "./Conversion.svelte";
+export { default as Vertd } from "./Vertd.svelte";
+export { default as Privacy } from "./Privacy.svelte";
+
+// TODO: clean up settings & button code (componetize)
+
+export interface DefaultFormats {
+	image: string;
+	video: string;
+	audio: string;
+	document: string;
+}
+export interface ISettings {
+	filenameFormat: string;
+	defaultFormat: DefaultFormats;
+	useDefaultFormat: boolean;
+	metadata: boolean;
+	plausible: boolean;
+	vertdURL: string;
+	vertdSpeed: ConversionSpeed; // videos
+	vertdBlockedHashes: Map<string, Date[]>; // hashes of files blocked from vertd conversion
+	vertdCustomHeaders: string; // custom headers to send to the vertd server
+	magickQuality: number; // images
+}
+
+export class Settings {
+	public static instance = new Settings();
+
+	public settings: ISettings = $state({
+		filenameFormat: "VERT_%name%",
+		defaultFormat: {
+			image: ".png",
+			video: ".mp4",
+			audio: ".mp3",
+			document: ".docx",
+		},
+		useDefaultFormat: false,
+		metadata: true,
+		plausible: true,
+		vertdURL: PUB_VERTD_URL,
+		vertdSpeed: "slow",
+		vertdBlockedHashes: new Map<string, Date[]>(),
+		vertdCustomHeaders: "",
+		magickQuality: 90,
+	});
+
+	public save() {
+		localStorage.setItem("settings", JSON.stringify(this.settings));
+		VertdInstance.instance.save();
+	}
+
+	public load() {
+		try {
+			VertdInstance.instance.load();
+			const persisted = readSettings<ISettings>();
+			if (!Object.keys(persisted).length) return;
+			const settings = persisted as ISettings;
+			const vertdBlockedHashes = new Map<string, Date[]>(
+				Object.entries(
+					settings.vertdBlockedHashes ||
+						this.settings.vertdBlockedHashes,
+				),
+			);
+
+			settings.vertdBlockedHashes = vertdBlockedHashes;
+
+			this.settings = {
+				...this.settings,
+				...settings,
+			};
+		} catch {
+			// ignore errors, use default settings
+		}
+	}
+}
