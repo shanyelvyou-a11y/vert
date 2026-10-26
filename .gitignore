@@ -1,0 +1,38 @@
+node_modules
+
+# Output
+.output
+.vercel
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# IDE
+.idea
+
+# --- added for GitHub push: never commit secrets/build output ---
+node_modules/
+.env
+.env.*
+!.env.example
+!.env.template
+.secrets.local
+*.db
+__pycache__/
+.next/
+.open-next/
+.wrangler/
+build/
